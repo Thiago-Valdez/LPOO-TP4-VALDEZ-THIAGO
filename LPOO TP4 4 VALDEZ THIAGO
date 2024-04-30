@@ -1,0 +1,138 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Estructura para almacenar los datos de una persona
+struct Persona {
+    char nombre[50];
+    char apellido[50];
+    char dni[20];
+};
+
+// Función para guardar los datos en un archivo
+void guardarDatos(struct Persona persona) {
+    FILE *archivo;
+    archivo = fopen("datos.txt", "a"); // Abre el archivo en modo apertura para escritura al final del archivo
+    if (archivo == NULL) {
+        printf("Error al abrir el archivo.");
+        exit(1);
+    }
+    fprintf(archivo, "%s,%s,%s\n", persona.nombre, persona.apellido, persona.dni); // Escribe los datos en el archivo
+    fclose(archivo); // Cierra el archivo
+    printf("Datos guardados exitosamente.\n");
+}
+
+// Función para verificar si los datos ya existen en el archivo
+int datosExistentes(struct Persona persona) {
+    FILE *archivo;
+    struct Persona personaArchivo;
+    archivo = fopen("datos.txt", "r"); // Abre el archivo en modo lectura
+    if (archivo == NULL) {
+        printf("Error al abrir el archivo.");
+        exit(1);
+    }
+    // Lee los datos del archivo línea por línea
+    while (fscanf(archivo, "%[^,],%[^,],%[^\n]\n", personaArchivo.nombre, personaArchivo.apellido, personaArchivo.dni) != EOF) {
+        // Compara los datos ingresados con los datos en el archivo
+        if (strcmp(persona.nombre, personaArchivo.nombre) == 0 && 
+            strcmp(persona.apellido, personaArchivo.apellido) == 0 && 
+            strcmp(persona.dni, personaArchivo.dni) == 0) {
+            fclose(archivo); // Cierra el archivo
+            return 1; // Retorna verdadero si los datos existen en el archivo
+        }
+    }
+    fclose(archivo); // Cierra el archivo
+    return 0; // Retorna falso si los datos no existen en el archivo
+}
+
+// Función para comparar dos personas por apellido y nombre (para ordenar)
+int compararPersonas(const void *a, const void *b) {
+    const struct Persona *personaA = (const struct Persona *)a;
+    const struct Persona *personaB = (const struct Persona *)b;
+    int comparacionApellido = strcmp(personaA->apellido, personaB->apellido);
+    if (comparacionApellido == 0) {
+        return strcmp(personaA->nombre, personaB->nombre);
+    }
+    return comparacionApellido;
+}
+
+// Función para buscar y mostrar datos por Apellido y Nombre ordenados
+void buscarPorApellidoNombreOrdenado(char apellidoBuscado[50], char nombreBuscado[50]) {
+    FILE *archivo;
+    struct Persona personas[100]; // Suponemos un máximo de 100 personas
+    int cantidadPersonas = 0;
+
+    archivo = fopen("datos.txt", "r"); // Abre el archivo en modo lectura
+    if (archivo == NULL) {
+        printf("Error al abrir el archivo.");
+        exit(1);
+    }
+    // Lee los datos del archivo y los almacena en una matriz de estructuras
+    while (fscanf(archivo, "%[^,],%[^,],%[^\n]\n", personas[cantidadPersonas].nombre, personas[cantidadPersonas].apellido, personas[cantidadPersonas].dni) != EOF) {
+        cantidadPersonas++;
+    }
+    fclose(archivo); // Cierra el archivo
+
+    // Ordena la matriz de personas por apellido y nombre
+    qsort(personas, cantidadPersonas, sizeof(struct Persona), compararPersonas);
+
+    // Busca y muestra los datos por Apellido y Nombre
+    int encontrado = 0;
+    for (int i = 0; i < cantidadPersonas; i++) {
+        if (strcmp(personas[i].apellido, apellidoBuscado) == 0 && strcmp(personas[i].nombre, nombreBuscado) == 0) {
+            printf("Nombre: %s\nApellido: %s\nDNI: %s\n", personas[i].nombre, personas[i].apellido, personas[i].dni);
+            encontrado = 1;
+            break;
+        }
+    }
+    if (!encontrado) {
+        printf("No se encontraron datos para el Apellido y Nombre ingresados.\n");
+    }
+}
+
+int main() {
+    int opcion;
+    struct Persona persona;
+
+    do {
+        printf("\n*** Menú ***\n");
+        printf("1. Ingresar datos y guardar en archivo\n");
+        printf("2. Buscar por Apellido y Nombre (ordenado)\n");
+        printf("3. Salir\n");
+        printf("Ingrese una opción: ");
+        scanf("%d", &opcion);
+
+        switch (opcion) {
+            case 1:
+                printf("Ingrese el nombre: ");
+                scanf("%s", persona.nombre);
+                printf("Ingrese el apellido: ");
+                scanf("%s", persona.apellido);
+                printf("Ingrese el DNI: ");
+                scanf("%s", persona.dni);
+                if (!datosExistentes(persona)) {
+                    guardarDatos(persona);
+                } else {
+                    printf("Los datos ingresados ya existen en el archivo.\n");
+                }
+                break;
+            case 2:
+                printf("Ingrese el Apellido a buscar: ");
+                char apellidoBuscado[50];
+                scanf("%s", apellidoBuscado);
+                printf("Ingrese el Nombre a buscar: ");
+                char nombreBuscado[50];
+                scanf("%s", nombreBuscado);
+                buscarPorApellidoNombreOrdenado(apellidoBuscado, nombreBuscado);
+                break;
+            case 3:
+                printf("Saliendo del programa.\n");
+                break;
+            default:
+                printf("Opción no válida. Por favor, ingrese una opción válida.\n");
+                break;
+        }
+    } while (opcion != 3);
+
+    return 0;
+}

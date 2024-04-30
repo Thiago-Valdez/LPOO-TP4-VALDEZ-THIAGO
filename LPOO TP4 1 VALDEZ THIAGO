@@ -1,0 +1,88 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Estructura para almacenar los datos de una persona
+struct Persona {
+    char nombre[50];
+    char apellido[50];
+    char dni[20];
+};
+
+// Función para guardar los datos en un archivo
+void guardarDatos(struct Persona persona) {
+    FILE *archivo;
+    archivo = fopen("datos.txt", "a"); // Abre el archivo en modo apertura para escritura al final del archivo
+    if (archivo == NULL) {
+        printf("Error al abrir el archivo.");
+        exit(1);
+    }
+    fprintf(archivo, "%s,%s,%s\n", persona.nombre, persona.apellido, persona.dni); // Escribe los datos en el archivo
+    fclose(archivo); // Cierra el archivo
+    printf("Datos guardados exitosamente.\n");
+}
+
+// Función para buscar datos por DNI
+void buscarPorDNI(char dniBuscado[20]) {
+    FILE *archivo;
+    struct Persona persona;
+    int encontrado = 0;
+    archivo = fopen("datos.txt", "r"); // Abre el archivo en modo lectura
+    if (archivo == NULL) {
+        printf("Error al abrir el archivo.");
+        exit(1);
+    }
+    // Lee los datos del archivo línea por línea
+    while (fscanf(archivo, "%[^,],%[^,],%[^\n]\n", persona.nombre, persona.apellido, persona.dni) != EOF) {
+        // Compara el DNI buscado con el DNI en el archivo
+        if (strcmp(persona.dni, dniBuscado) == 0) {
+            printf("Nombre: %s\nApellido: %s\n", persona.nombre, persona.apellido);
+            encontrado = 1;
+            break; // Sale del bucle si encuentra el DNI
+        }
+    }
+    if (!encontrado) {
+        printf("No se encontraron datos para el DNI ingresado.\n");
+    }
+    fclose(archivo); // Cierra el archivo
+}
+
+int main() {
+    int opcion;
+    struct Persona persona;
+
+    do {
+        printf("\n*** Menú ***\n");
+        printf("1. Ingresar datos y guardar en archivo\n");
+        printf("2. Buscar por DNI\n");
+        printf("3. Salir\n");
+        printf("Ingrese una opción: ");
+        scanf("%d", &opcion);
+
+        switch (opcion) {
+            case 1:
+                printf("Ingrese el nombre: ");
+                scanf("%s", persona.nombre);
+                printf("Ingrese el apellido: ");
+                scanf("%s", persona.apellido);
+                printf("Ingrese el DNI: ");
+                scanf("%s", persona.dni);
+                guardarDatos(persona);
+                break;
+            case 2:
+                printf("Ingrese el DNI a buscar: ");
+                char dniBuscado[20];
+                scanf("%s", dniBuscado);
+                buscarPorDNI(dniBuscado);
+                break;
+            case 3:
+                printf("Saliendo del programa.\n");
+                break;
+            default:
+                printf("Opción no válida. Por favor, ingrese una opción válida.\n");
+                break;
+        }
+    } while (opcion != 3);
+
+    return 0;
+}
